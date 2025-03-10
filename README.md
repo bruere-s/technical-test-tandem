@@ -1,46 +1,46 @@
-# Getting Started with Create React App
+# Technical test Tandem
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Run project
 
-## Available Scripts
+Run the back-end:
 
-In the project directory, you can run:
+```sh
+cd back
+npm i
+npm start
+```
 
-### `npm start`
+Run the front-end:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```sh
+cd front
+npm i
+npm start
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+You can now access the app on [http://localhost:3000](http://localhost:3000)
 
-### `npm test`
+## Documentation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+I choose to stick to the time limit of 2 hours. So I had no time to implement a nice display system for a PM. In a production context, I would have use a display library like [Recharts](https://recharts.org/en-US/api/SankeyChart) or [React Google Charts](https://www.react-google-charts.com/examples/sankey) to display the data in a more meaningful way, probably with a Sankey charts, which seems for me the best approach for this case.
 
-### `npm run build`
+The data was parsed using documentation from Recharts, so the data is nearly ready to be displayed in a Sankey chart.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+I haven't implemented the search for anomalies neither, see the dedicated section.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Your overall approach to processing the data
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+I created a simple back-end that serves the data to the front-end. The front-end is responsible for displaying the data and allowing the user to view it.
+I then parsed the data to display it in a table. The lack of time did not allow me to implement the search for anomalies.
 
-### `npm run eject`
+### How you identified and summarized meaningful flows
+I simply parsed the JSON data in this way: Identify each unique session and the path that the user took. And then, increment a count for each source page and target page detected.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### How you detected anomalies
+For the search of anomalies, I would have implemented a search by comparing the time of each session and detect a potential bottleneck. And also detect fast and efficient flow, so we can implement it on the more slow ones.
+An other anomaly could be the potentials back and forth between pages in a unique session, meaning the user can be lost and searching for a specific page.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Your strategy for scaling and industrializing the solution.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+In the context of this test, I choose to compute the data on the client side. For a more efficient way in a real world scenario, I would have implemented a back-end that would have computed the data and then send it to the front-end. This way, the front-end would only have to display the data and can receive only the meaningful data, with a pagination and sorting system.
+Also, use of Map and Record structure would have been better in a case of a large dataset. For this test, arrays are sufficient.
