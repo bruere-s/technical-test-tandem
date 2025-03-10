@@ -1,82 +1,70 @@
 import React, { useEffect, useState } from "react";
 import { UserFlow } from "../../../shared/types";
 
-interface INode {
-  name: string;
+interface ProcessedFlow {
+  source: string;
+  target: string;
+  count: number;
 }
 
-interface ILink {
-  source: number;
-  target: number;
-  value: number;
-}
-
-function UserFlowVisualization({ data } : { data: UserFlow[] }) {
-  const [nodes, setNodes] = useState<INode[]>([]);
-  const [links, setLinks] = useState<ILink[]>([]);
-  const [ready, setReady] = useState(false);
+function UserFlowVisualization ({ data }: { data: UserFlow[] }) {
+  const [flows, setFlows] = useState<ProcessedFlow[]>([]);
 
   useEffect(() => {
     if (!data || data.length === 0) return;
-    processUserFlows(data);
+    setFlows(processUserFlows(data));
   }, [data]);
 
-  const processUserFlows = (events: UserFlow[]) => {
-    const nodeMap = new Map<string, number>();
-    let nodeList: INode[] = [];
-    let linkList: ILink[] = [];
-    let index = 0;
+  const processUserFlows = (events: UserFlow[]): ProcessedFlow[] => {
+    const sessions: { session_id: string; paths: string[] }[] = [];
+    const flows: ProcessedFlow[] = [];
 
-    const sessions: Record<string, string[]> = {};
     events.forEach(({ session_id, path }) => {
       if (!session_id || !path) return;
-      if (!sessions[session_id]) sessions[session_id] = [];
-      sessions[session_id].push(path);
+      let session = sessions.find((s) => s.session_id === session_id);
+      if (!session) {
+        session = { session_id, paths: [] };
+        sessions.push(session);
+      }
+      session.paths.push(path);
     });
 
-    Object.values(sessions).forEach((session) => {
-      for (let i = 0; i < session.length - 1; i++) {
-        const source = session[i];
-        const target = session[i + 1];
-        if (!nodeMap.has(source)) {
-          nodeMap.set(source, index++);
-          nodeList.push({ name: source });
-        }
-        if (!nodeMap.has(target)) {
-          nodeMap.set(target, index++);
-          nodeList.push({ name: target });
-        }
-        const sourceIndex = nodeMap.get(source)!;
-        const targetIndex = nodeMap.get(target)!;
-        const existingLink = linkList.find(
-          (link) => link.source === sourceIndex && link.target === targetIndex
-        );
-        if (existingLink) {
-          existingLink.value += 1;
-        } else {
-          linkList.push({ source: sourceIndex, target: targetIndex, value: 1 });
-        }
+    sessions.forEach(({ paths }) => {
+      for (let i = 0; i < paths.length - 1; i++) {
+        const existingFlow = flows.find((f) => f.source === paths[i] && f.target === paths[i + 1]);
+        if (existingFlow) existingFlow.count += 1;
+        else flows.push({ source: paths[i], target: paths[i + 1], count: 1 });
       }
     });
 
-    // debug
-    nodeList = nodeList.sort((a, b) => a.name > b.name ? 1 : (a.name === b.name ? 0 : -1));
-    linkList = linkList.sort((a, b) => a.source - b.source);
-    console.log('node', nodeList)
-    console.log('linkList', linkList)
-
-    setNodes(nodeList);
-    setLinks(linkList);
-    setReady(true)
+    return flows.sort((a, b) => b.count - a.count);
   };
 
   return (
-    <div style={{ width: "100%", height: 400 }}>
-      { ready &&
-          <div>
-            ready
-          </div>
-      }
+    <div style={{ padding: "10px" }}>
+      <h2>User Flow Overview</h2>
+      {flows.length > 0 ? (
+        <table border={1} cellPadding="5" style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Target</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {flows.map((flow, index) => (
+              <tr key={index}>
+                <td>{flow.source}</td>
+                <td>{flow.target}</td>
+                <td>{flow.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>No user flow data available.</p>
+      )}
     </div>
   );
 };
